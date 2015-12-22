@@ -1,0 +1,7 @@
+*~
+*.swp
+*.swo
+*.bak
+rockdev/Image/
+rockdev/update.img
+log/
