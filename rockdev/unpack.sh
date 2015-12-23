@@ -18,6 +18,6 @@ fi
 rm -f output/firmware.img
 rm -f output/boot.bin
 echo "Unpacking update.img OK."
-echo "Press any key to quit:"
-read -n1 -s key
+#echo "Press any key to quit:"
+#read -n1 -s key
 exit 0
