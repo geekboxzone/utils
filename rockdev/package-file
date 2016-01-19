@@ -10,7 +10,8 @@ resource    Image/resource.img
 misc		Image/misc.img
 kernel		Image/kernel.img
 boot        Image/boot.img
-recovery	Image/ramfs.img
+recovery	Image/recovery.img
+ramfs		Image/ramfs.img
 system		Image/system.img
 linuxroot	Image/rootfs.img
 backup		RESERVED
