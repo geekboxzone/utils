@@ -20,6 +20,9 @@ echo_print()
 	echo "End name:   $end_name"
 	echo "End size:   $end_size"
 	echo "End offset: $end_offset"
+	echo "Rfs name:   $rfs_name"
+	echo "Rfs size:   $rfs_size"
+	echo "Rfs offset: $rfs_offset"
 }
 
 # unpack the update.img
@@ -39,7 +42,8 @@ partition2=`grep userdata $parameter_file | awk -F "userdata" '{print $2}'`
 app_partition=`echo $partition1 | awk -F"," '{print $NF}' | awk -F"(" '{print $1}'`
 app_size=`get_size $app_partition`
 app_offset=`get_offset $app_partition`
-# radical_update@android, or linuxroot@dualos
+# old build: radical_update@android, or linuxroot@dualos
+# new build: radical_update@android, or ramfs@dualos
 mid_partition=`echo $partition2 | awk -F"," '{print $2}' | awk -F"(" '{print $1}'`
 mid_name=`echo $partition2 | awk -F"(" '{print $2}' | awk -F")" '{print $1}'`
 mid_size=`get_size $mid_partition`
@@ -49,6 +53,13 @@ end_partition=`echo $partition2 | awk -F"," '{print $3}' | awk -F"(" '{print $1}
 end_name=`echo $partition2 | awk -F"(" '{print $3}' | awk -F")" '{print $1}'`
 end_size=`get_size $end_partition`
 end_offset=`get_offset $end_partition`
+# for new build: linuxroot@dualos
+rfs_partition=`echo $partition2 | awk -F"," '{print $4}' | awk -F"(" '{print $1}'`
+rfs_name=`echo $partition2 | awk -F"(" '{print $4}' | awk -F")" '{print $1}'`
+rfs_size=`get_size $rfs_partition`
+rfs_offset=`get_offset $rfs_partition`
+app_size_orig=$app_size
+
 
 # read from the input
 echo "Tell me the size you need for App partition:"
@@ -77,7 +88,15 @@ mid_offset=`echo "obase=16;$mid_offset_dec" | bc`
 end_offset=`echo "obase=16;$end_offset_dec" | bc`
 
 partition0=`echo $partition1 | awk -F"$app_partition" '{print $1}'`
-partition2="),$mid_size@0x$mid_offset($mid_name),-@0x$end_offset($end_name)"
+if [ -z $rfs_name ]; then
+	partition2="),$mid_size@0x$mid_offset($mid_name),-@0x$end_offset($end_name)"
+else
+	echo "New dualOS build"
+	# Note: $rfs_offset is fix value in new build
+	end_size_dec=`expr $(($end_size)) + $(($app_size_orig)) - $app_size_dec`
+	end_size=0x`echo "obase=16;$end_size_dec" | bc`
+	partition2="),$mid_size@0x$mid_offset($mid_name),$end_size@0x$end_offset($end_name),-@$rfs_offset($rfs_name)"
+fi
 partitions="$partition0"0x"$app_size@$app_offset(userdata$partition2"
 
 # generate a new parameter
